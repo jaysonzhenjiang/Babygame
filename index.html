@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小宝宝快乐器 - 联机排行榜版</title>
-    <script src="https://unpkg.com/bmob.js-sdk@2.4.19/dist/Bmob-2.4.19.min.js"></script>
+    <title>小宝宝快乐器 - 最终修复版</title>
+    <script src="https://cdn.jsdelivr.net/npm/bmob.js-sdk@2.4.19/dist/Bmob-2.4.19.min.js"></script>
     <style>
         /* --- 样式部分保持不变 --- */
         body {
@@ -64,7 +64,6 @@
     </style>
 </head>
 <body>
-
     <div id="loginOverlay">
         <div class="login-box">
             <h2 style="color: #ff5e62">你是谁？</h2>
@@ -72,30 +71,26 @@
             <input type="text" id="userNameInput" placeholder="输入你的名字">
             <br>
             <button class="btn-login" onclick="checkLogin()">开启快乐</button>
+            <div id="loadStatus" style="font-size: 12px; color: #999; margin-top:10px;">资源加载中...</div>
         </div>
     </div>
 
     <h1>小宝宝快乐器</h1>
-
     <div class="stats-container">
         <div id="welcomeText" style="font-weight: bold; color: #333; margin-bottom: 5px;"></div>
         <div id="todayStatus" style="font-size: 0.8rem; color: #666;">正在连接云端数据...</div>
     </div>
-
     <div class="wheel-wrapper">
         <div class="pointer"></div>
         <canvas id="wheelCanvas" width="800" height="800"></canvas>
     </div>
-
     <button class="btn-start" onclick="startSpin()" id="spinBtn">点击开始</button>
-
     <div class="leaderboard">
         <h3>🐶 今日最强狗粑粑 (全国联网版)</h3>
         <div id="rankList">
             <div style="text-align: center; color: #999; font-size: 0.8rem;">加载中...</div>
         </div>
     </div>
-
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
             <div id="modalTitle" style="color: #888">运气爆棚！</div>
@@ -107,15 +102,11 @@
 
     <script>
         // ============================================
-        // ⚠️ 请务必在这里填入你刚才复制的密钥 ⚠️
+        // ⚠️ 第一步：变量定义放在最前面 (防止报错)
         // ============================================
+        // 请在这里填入你的 Key，注意要保留单引号 ''
         const SECRET_KEY = 'a1a0d16d97c4b5a2';   
         const API_SAFE_CODE = 'BabyGame20260203'; 
-        
-        // 初始化 Bmob
-        if (SECRET_KEY.length > 5) {
-            Bmob.initialize(SECRET_KEY, API_SAFE_CODE);
-        }
 
         const ALLOWED_NAMES = ['吉吉', '小江', '访客'];
         let currentUser = "";
@@ -130,13 +121,32 @@
             { name: "嘻嘻嘻", prob: 0.03, weight: 6, color: "#fd79a8" }    
         ];
 
+        // ============================================
+        // ⚠️ 第二步：检测 Bmob 是否加载成功
+        // ============================================
+        window.onload = function() {
+            if (typeof Bmob === 'undefined') {
+                document.getElementById('loadStatus').innerHTML = "<span style='color:red'>⚠️ 云端服务连接失败，请刷新网页</span>";
+                alert("云端组件没加载出来，请刷新网页再试！");
+            } else {
+                document.getElementById('loadStatus').innerText = "✅ 系统就绪，请输入暗号";
+                // 初始化 Bmob
+                if (SECRET_KEY.length > 5 && !SECRET_KEY.includes('这里填')) {
+                    Bmob.initialize(SECRET_KEY, API_SAFE_CODE);
+                }
+            }
+        };
+
+        // ============================================
+        // ⚠️ 第三步：函数定义
+        // ============================================
         function checkLogin() {
             const name = document.getElementById('userNameInput').value.trim();
+            // 这里现在绝对安全了，因为 ALLOWED_NAMES 已经在最上面定义了
             if (ALLOWED_NAMES.includes(name)) {
                 currentUser = name;
                 document.getElementById('loginOverlay').style.transform = 'translateY(-100%)';
                 document.getElementById('welcomeText').innerText = `你好呀，${currentUser}！`;
-                // 登录成功后，立刻去云端拉取今日榜单
                 fetchLeaderboard();
             } else {
                 alert("暗号不对！你是哪里的野粑粑？");
@@ -144,29 +154,28 @@
         }
 
         function getTodayKey() {
-            // 获取今天的日期字符串，例如 "2023/10/27"
             return new Date().toLocaleDateString();
         }
 
-        // --- 从 Bmob 云端获取数据 ---
         function fetchLeaderboard() {
             if (SECRET_KEY.includes("这里填")) {
                 document.getElementById('rankList').innerHTML = "请先在代码里填写 Bmob 密钥";
                 return;
             }
+            // 再次检查 Bmob 是否可用
+            if (typeof Bmob === 'undefined') return;
 
             const today = getTodayKey();
-            const query = Bmob.Query("Leaderboard"); // 查询 Leaderboard 表
-            query.equalTo("dateKey", "==", today);   // 只查今天的
-            query.order("-createdAt");               // 按时间倒序（最新的在最前）
+            const query = Bmob.Query("Leaderboard"); 
+            query.equalTo("dateKey", "==", today);   
+            query.order("-createdAt");               
             
             query.find().then(res => {
-                // res 就是云端返回的数据数组
                 renderCloudData(res);
                 updateStatusFromCloud(res);
             }).catch(err => {
                 console.error("连接失败:", err);
-                document.getElementById('rankList').innerHTML = `<div style="text-align: center; color: red; font-size: 0.8rem;">云端连接失败，请检查网络或密钥</div>`;
+                document.getElementById('rankList').innerHTML = `<div style="text-align: center; color: red; font-size: 0.8rem;">云端连接失败，请检查密钥</div>`;
             });
         }
 
@@ -187,7 +196,6 @@
         }
 
         function updateStatusFromCloud(list) {
-            // 看看我在不在今天的列表里
             const myRecord = list.find(item => item.name === currentUser);
             if (myRecord) {
                 document.getElementById('todayStatus').innerText = `今日手气：${myRecord.prize} (已入榜单)`;
@@ -196,18 +204,14 @@
             }
         }
 
-        // --- 上传数据到 Bmob ---
         function uploadScore(prizeName) {
             const tipEl = document.getElementById('uploadTip');
-            
             if (prizeName === "再来一次") {
                 tipEl.innerText = "“再来一次”不作数，再接再厉！";
                 return;
             }
 
             const today = getTodayKey();
-            
-            // 1. 先查询自己今天是不是已经提交过了
             const query = Bmob.Query("Leaderboard");
             query.equalTo("dateKey", "==", today);
             query.equalTo("name", "==", currentUser);
@@ -216,7 +220,6 @@
                 if (res.length > 0) {
                     tipEl.innerText = "今日已留名，本次纯属玩乐~";
                 } else {
-                    // 2. 如果没提交过，则新建一条数据
                     const queryAdd = Bmob.Query("Leaderboard");
                     queryAdd.set("name", currentUser);
                     queryAdd.set("prize", prizeName);
@@ -225,7 +228,7 @@
                     
                     queryAdd.save().then(obj => {
                         tipEl.innerText = "恭喜！你的战绩已同步到全国榜单！";
-                        fetchLeaderboard(); // 刷新榜单
+                        fetchLeaderboard(); 
                     }).catch(err => {
                         tipEl.innerText = "上传失败：" + JSON.stringify(err);
                     });
@@ -233,7 +236,7 @@
             });
         }
 
-        // --- 下面是抽奖动画逻辑，无需改动 ---
+        // --- 抽奖逻辑 ---
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
         let currentRotation = 0;
