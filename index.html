@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小宝宝快乐器 - 终极连接版</title>
-    <script src="https://unpkg.com/bmob.js-sdk@2.4.19/dist/Bmob-2.4.19.min.js"></script>
+    <title>小宝宝快乐器 - 极速直连版</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); padding-bottom: 200px; }
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff5e62; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -20,14 +19,12 @@
         .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 35px; height: 45px; background: #ff4757; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; }
         .btn-start { padding: 12px 50px; font-size: 1.4rem; background: #2ed573; color: white; border: none; border-radius: 50px; margin-top: 10px; cursor: pointer; }
         
-        /* 调试控制台 - 如果出错会显示在这里 */
         #debugConsole {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 120px;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 100px;
             background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace;
             font-size: 11px; overflow-y: scroll; padding: 10px; box-sizing: border-box;
             z-index: 9999; text-align: left; pointer-events: none;
         }
-        .log-error { color: #ff5e62; font-weight: bold; }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .modal-overlay.active { display: flex; }
@@ -41,14 +38,14 @@
             <h2 style="color: #ff5e62">你是谁？</h2>
             <input type="text" id="userNameInput" placeholder="输入你的名字">
             <button class="btn-login" onclick="checkLogin()">开启快乐</button>
-            <div id="sdkStatus" style="margin-top:10px; font-size:12px; color:#666;">初始化中...</div>
+            <div id="networkTip" style="margin-top:10px; font-size:12px; color:#666;">直连模式就绪</div>
         </div>
     </div>
 
     <h1>小宝宝快乐器</h1>
     <div style="background:rgba(255,255,255,0.8); padding:10px; border-radius:10px; text-align:center;">
         <div id="welcomeText" style="font-weight:bold;"></div>
-        <div id="todayStatus" style="font-size:12px; color:#666;">等待连接...</div>
+        <div id="todayStatus" style="font-size:12px; color:#666;">等待操作...</div>
     </div>
 
     <div class="wheel-wrapper">
@@ -70,58 +67,71 @@
         </div>
     </div>
 
-    <div id="debugConsole"><div>>>> 系统准备就绪</div></div>
+    <div id="debugConsole"><div>>>> 直连模式启动</div></div>
 
     <script>
         // 日志工具
-        function log(msg, type) {
+        function log(msg) {
             const box = document.getElementById('debugConsole');
             const d = document.createElement('div');
             d.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            if(type==='error') d.className = 'log-error';
             box.appendChild(d);
             box.scrollTop = box.scrollHeight;
         }
-        window.onerror = function(m) { log("系统错误:" + m, 'error'); };
 
         // ==========================================
-        // ✅ 这里是关键修改：改用 AppID + REST Key 方式
-        // ✅ 我已经照着你的截图填好了，不需要动
+        // ✅ 核心配置 (已填好)
         // ==========================================
         const APP_ID = '46665cb4f873b9c33d508dbe48682e4b';
         const REST_KEY = '9837d091aafcf90ccb396f1e9a75929a';
 
-        let isReady = false;
-
-        window.onload = function() {
-            if (typeof Bmob === 'undefined') {
-                log("❌ SDK加载失败，请刷新网页", 'error');
-                document.getElementById('sdkStatus').innerHTML = "<span style='color:red'>网络不通，请刷新</span>";
-            } else {
-                try {
-                    // 初始化 Bmob (使用标准方式)
-                    Bmob.initialize(APP_ID, REST_KEY);
-                    isReady = true;
-                    log("✅ Bmob初始化成功");
-                    document.getElementById('sdkStatus').innerHTML = "<span style='color:green'>连接成功，请输入名字</span>";
-                } catch(e) {
-                    log("❌ 初始化报错: " + e.message, 'error');
+        // ==========================================
+        // 🚀 自己手写的迷你 Bmob 工具 (替代加载不出来的外部文件)
+        // ==========================================
+        async function callBmob(method, endpoint, data) {
+            const url = `https://api.bmobcloud.com/1/classes/${endpoint}` + (method === 'GET' && data ? '?' + new URLSearchParams(data) : '');
+            const options = {
+                method: method,
+                headers: {
+                    'X-Bmob-Application-Id': APP_ID,
+                    'X-Bmob-REST-API-Key': REST_KEY,
+                    'Content-Type': 'application/json'
                 }
+            };
+            if (method === 'POST') options.body = JSON.stringify(data);
+
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error(`状态码 ${res.status}`);
+                return await res.json();
+            } catch (e) {
+                log(`❌ 网络请求失败: ${e.message}`);
+                throw e;
             }
-        };
+        }
 
         const ALLOWED_NAMES = ['吉吉', '小江', '访客'];
         let currentUser = "";
 
+        // 检查连接
+        window.onload = function() {
+            log("正在测试网络...");
+            // 简单测试一下连接
+            callBmob('GET', 'Leaderboard', { limit: 1 }).then(() => {
+                log("✅ 云端连接畅通！");
+                document.getElementById('networkTip').innerHTML = "<span style='color:green'>✅ 网络通畅，可以登录</span>";
+            }).catch(e => {
+                log("⚠️ 网络连接可能有问题");
+                document.getElementById('networkTip').innerHTML = "<span style='color:red'>⚠️ 网络慢，请多试几次</span>";
+            });
+        }
+
         function checkLogin() {
             const name = document.getElementById('userNameInput').value.trim();
-            if(!isReady) { alert("云端没连上，请看下方黑框报错"); return; }
-
             if (ALLOWED_NAMES.includes(name)) {
                 currentUser = name;
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('welcomeText').innerText = `你好呀，${currentUser}！`;
-                log("登录成功，正在拉取榜单...");
                 fetchData();
             } else {
                 alert("暗号不对！");
@@ -129,18 +139,24 @@
         }
 
         function fetchData() {
+            log("正在拉取榜单...");
             const today = new Date().toLocaleDateString();
-            const query = Bmob.Query("Leaderboard");
-            query.equalTo("dateKey", "==", today);
-            query.order("-createdAt");
-            query.find().then(res => {
-                log(`✅ 获取到 ${res.length} 条数据`);
-                renderList(res);
-                const my = res.find(i => i.name === currentUser);
+            
+            // 构建查询参数
+            const params = {
+                where: JSON.stringify({ "dateKey": today }),
+                order: "-createdAt"
+            };
+
+            callBmob('GET', 'Leaderboard', params).then(res => {
+                const list = res.results || [];
+                log(`✅ 拉取成功，共 ${list.length} 条`);
+                renderList(list);
+                
+                const my = list.find(i => i.name === currentUser);
                 document.getElementById('todayStatus').innerText = my ? `今日战绩: ${my.prize}` : "今日暂未抽奖";
-            }).catch(err => {
-                log("❌ 拉取失败: " + JSON.stringify(err), 'error');
-                document.getElementById('todayStatus').innerText = "获取数据失败";
+            }).catch(() => {
+                document.getElementById('todayStatus').innerText = "获取数据失败，请刷新";
             });
         }
 
@@ -157,34 +173,35 @@
 
         function uploadScore(prize) {
             if(prize === "再来一次") return;
-            log(`正在上传: ${prize}...`);
+            log(`准备上传: ${prize}...`);
             
-            // 检查今日是否已存在
-            const q1 = Bmob.Query("Leaderboard");
-            q1.equalTo("dateKey", "==", new Date().toLocaleDateString());
-            q1.equalTo("name", "==", currentUser);
-            q1.find().then(res => {
-                if(res.length > 0) {
-                    log("⚠️ 今日已存在，不重复上传");
+            const today = new Date().toLocaleDateString();
+            
+            // 1. 查重
+            const params = { where: JSON.stringify({ "dateKey": today, "name": currentUser }) };
+            
+            callBmob('GET', 'Leaderboard', params).then(res => {
+                if (res.results && res.results.length > 0) {
+                    log("⚠️ 今日已记录");
                     document.getElementById('uploadTip').innerText = "今日已记录，不再重复上传";
                 } else {
-                    const q2 = Bmob.Query("Leaderboard");
-                    q2.set("name", currentUser);
-                    q2.set("prize", prize);
-                    q2.set("dateKey", new Date().toLocaleDateString());
-                    q2.set("timeStr", new Date().toLocaleTimeString());
-                    q2.save().then(() => {
-                        log("✅ 上传成功!");
+                    // 2. 上传
+                    const data = {
+                        name: currentUser,
+                        prize: prize,
+                        dateKey: today,
+                        timeStr: new Date().toLocaleTimeString()
+                    };
+                    callBmob('POST', 'Leaderboard', data).then(() => {
+                        log("✅ 上传成功！");
                         document.getElementById('uploadTip').innerText = "战绩已同步云端";
                         fetchData();
-                    }).catch(e => {
-                        log("❌ 上传失败: " + JSON.stringify(e), 'error');
                     });
                 }
             });
         }
 
-        // 抽奖逻辑
+        // 抽奖动画
         const prizes = [
             { name: "亲一口", weight: 12, color: "#FF9F43" },
             { name: "再来一次", weight: 15, color: "#54a0ff" },
