@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小宝宝快乐器 - 最终版</title>
-    <script src="https://code.bdstatic.com/npm/bmob.js-sdk@2.4.19/dist/Bmob-2.4.19.min.js"></script>
+    <title>小宝宝快乐器 - 终极连接版</title>
+    <script src="https://unpkg.com/bmob.js-sdk@2.4.19/dist/Bmob-2.4.19.min.js"></script>
     <style>
-        /* --- 样式部分 --- */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); }
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff5e62; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform 0.5s ease-in-out; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
-        .login-box input { padding: 12px; font-size: 1.1rem; border: 2px solid #eee; border-radius: 10px; margin-bottom: 15px; width: 200px; outline: none; }
-        .btn-login { background: #ff5e62; color: white; border: none; padding: 10px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; }
-        .leaderboard { width: 85vw; max-width: 380px; background: white; border-radius: 15px; margin-top: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(255, 94, 98, 0.1); margin-bottom: 30px; border: 2px solid #fff5f5; }
-        .leaderboard h3 { margin: 0 0 12px 0; color: #ff5e62; font-size: 1.2rem; text-align: center; letter-spacing: 1px; border-bottom: 2px solid #fff5f5; padding-bottom: 8px; }
-        .rank-item { display: flex; justify-content: space-between; font-size: 0.95rem; padding: 8px 0; border-bottom: 1px dashed #fceaea; align-items: center; }
-        .rank-name { font-weight: bold; color: #333; }
-        .rank-prize { color: #ff4757; font-weight: 800; font-size: 1rem; }
-        .stats-container { background: rgba(255, 255, 255, 0.8); border-radius: 15px; padding: 10px 20px; margin: 10px 0; text-align: center; backdrop-filter: blur(5px); border: 1px solid #fff; max-width: 85vw; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); padding-bottom: 200px; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff5e62; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 300px; }
+        .login-box input { padding: 12px; font-size: 1.1rem; border: 2px solid #eee; border-radius: 10px; margin-bottom: 15px; width: 100%; outline: none; box-sizing: border-box; }
+        .btn-login { background: #ff5e62; color: white; border: none; padding: 10px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; }
+        
+        .leaderboard { width: 85vw; max-width: 380px; background: white; border-radius: 15px; margin-top: 20px; padding: 15px; border: 2px solid #fff5f5; }
+        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #fceaea; }
+        
         .wheel-wrapper { position: relative; width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; margin: 10px auto; }
-        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 35px; height: 45px; background: #ff4757; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); }
-        .btn-start { padding: 12px 50px; font-size: 1.4rem; background: #2ed573; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(3px); }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; transform: scale(0.5); transition: transform 0.4s; border: 5px solid #ff5e62; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .modal-overlay.active .modal-content { transform: scale(1); }
-        .prize-big-text { font-size: 2.5rem; font-weight: bold; margin: 15px 0; color: #ff4757; text-shadow: 1px 1px 0 #fff; }
-        .confetti { position: fixed; width: 10px; height: 10px; top: -20px; z-index: 101; }
-        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+        canvas { width: 100%; height: 100%; border-radius: 50%; }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 35px; height: 45px; background: #ff4757; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; }
+        .btn-start { padding: 12px 50px; font-size: 1.4rem; background: #2ed573; color: white; border: none; border-radius: 50px; margin-top: 10px; cursor: pointer; }
+        
+        /* 调试控制台 - 如果出错会显示在这里 */
+        #debugConsole {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 120px;
+            background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace;
+            font-size: 11px; overflow-y: scroll; padding: 10px; box-sizing: border-box;
+            z-index: 9999; text-align: left; pointer-events: none;
+        }
+        .log-error { color: #ff5e62; font-weight: bold; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; text-align: center; width: 80%; }
     </style>
 </head>
 <body>
@@ -36,250 +39,207 @@
     <div id="loginOverlay">
         <div class="login-box">
             <h2 style="color: #ff5e62">你是谁？</h2>
-            <p style="color: #666; font-size: 0.8rem">只有专属粑粑能进来~</p>
             <input type="text" id="userNameInput" placeholder="输入你的名字">
-            <br>
             <button class="btn-login" onclick="checkLogin()">开启快乐</button>
-            <div id="loadStatus" style="font-size: 12px; color: #999; margin-top:10px;">检查网络中...</div>
-            <button id="retryBtn" onclick="location.reload()" style="display:none; margin-top:10px; font-size:12px; border:1px solid #999; background:white; padding:5px 10px; border-radius:5px;">重新加载</button>
+            <div id="sdkStatus" style="margin-top:10px; font-size:12px; color:#666;">初始化中...</div>
         </div>
     </div>
 
     <h1>小宝宝快乐器</h1>
-
-    <div class="stats-container">
-        <div id="welcomeText" style="font-weight: bold; color: #333; margin-bottom: 5px;"></div>
-        <div id="todayStatus" style="font-size: 0.8rem; color: #666;">正在连接云端数据...</div>
+    <div style="background:rgba(255,255,255,0.8); padding:10px; border-radius:10px; text-align:center;">
+        <div id="welcomeText" style="font-weight:bold;"></div>
+        <div id="todayStatus" style="font-size:12px; color:#666;">等待连接...</div>
     </div>
 
     <div class="wheel-wrapper">
         <div class="pointer"></div>
         <canvas id="wheelCanvas" width="800" height="800"></canvas>
     </div>
-
     <button class="btn-start" onclick="startSpin()" id="spinBtn">点击开始</button>
 
     <div class="leaderboard">
-        <h3>🐶 今日最强狗粑粑 (云端实时)</h3>
-        <div id="rankList">
-            <div style="text-align: center; color: #999; font-size: 0.8rem;">加载中...</div>
-        </div>
+        <h3 style="color:#ff5e62; text-align:center; border-bottom:1px solid #eee; padding-bottom:5px;">🐶 实时战况</h3>
+        <div id="rankList" style="text-align:center; font-size:12px; color:#999;">加载中...</div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
-            <div id="modalTitle" style="color: #888">运气爆棚！</div>
-            <div class="prize-big-text" id="prizeText"></div>
-            <div id="uploadTip" style="font-size: 0.8rem; color: #999; margin-bottom: 15px;"></div>
-            <button style="padding: 12px 30px; border-radius: 30px; border: none; background: #ff5e62; color:white; cursor: pointer; font-weight: bold;" onclick="closeModal()">开心收下</button>
+            <h2 id="prizeText" style="color:#ff4757; font-size:2rem;"></h2>
+            <div id="uploadTip" style="font-size:12px; color:#999;"></div>
+            <button onclick="closeModal()" style="margin-top:10px; padding:10px 30px; background:#ff5e62; color:white; border:none; border-radius:20px;">收下</button>
         </div>
     </div>
 
+    <div id="debugConsole"><div>>>> 系统准备就绪</div></div>
+
     <script>
-        // ============================================
-        // ✅ 已经帮你填好了密钥
-        // ============================================
-        const SECRET_KEY = 'a1a0d16d97c4b5a2';    
-        const API_SAFE_CODE = 'BabyGame20260203'; 
+        // 日志工具
+        function log(msg, type) {
+            const box = document.getElementById('debugConsole');
+            const d = document.createElement('div');
+            d.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            if(type==='error') d.className = 'log-error';
+            box.appendChild(d);
+            box.scrollTop = box.scrollHeight;
+        }
+        window.onerror = function(m) { log("系统错误:" + m, 'error'); };
 
-        const ALLOWED_NAMES = ['小江', '吉吉', '访客'];
-        let currentUser = "";
-        let isBmobReady = false;
+        // ==========================================
+        // ✅ 这里是关键修改：改用 AppID + REST Key 方式
+        // ✅ 我已经照着你的截图填好了，不需要动
+        // ==========================================
+        const APP_ID = '46665cb4f873b9c33d508dbe48682e4b';
+        const REST_KEY = '9837d091aafcf90ccb396f1e9a75929a';
 
-        const prizes = [
-            { name: "亲一口", prob: 0.10, weight: 12, color: "#FF9F43" },
-            { name: "再来一次", prob: 0.30, weight: 15, color: "#54a0ff" },
-            { name: "奖金50", prob: 0.15, weight: 15, color: "#2ed573" },
-            { name: "奖金30", prob: 0.15, weight: 15, color: "#1dd1a1" },
-            { name: "奖金100", prob: 0.05, weight: 25, color: "#ff4757" }, 
-            { name: "奖金200", prob: 0.02, weight: 6, color: "#5f27cd" }, 
-            { name: "奖金5元", prob: 0.20, weight: 6, color: "#a29bfe" },  
-            { name: "嘻嘻嘻", prob: 0.03, weight: 6, color: "#fd79a8" }    
-        ];
+        let isReady = false;
 
-        // --- 核心：检测云端组件是否活着 ---
         window.onload = function() {
-            // 延时一小会儿，确保 Bmob 加载
-            setTimeout(() => {
-                if (typeof Bmob === 'undefined') {
-                    document.getElementById('loadStatus').innerHTML = "<span style='color:red'>❌ 网络有点慢，请点重新加载</span>";
-                    document.getElementById('retryBtn').style.display = 'inline-block';
-                } else {
-                    document.getElementById('loadStatus').innerHTML = "<span style='color:green'>✅ 云端组件加载成功！</span>";
-                    isBmobReady = true;
-                    // 初始化 Bmob
-                    try {
-                        Bmob.initialize(SECRET_KEY, API_SAFE_CODE);
-                        console.log("Bmob Init Success");
-                    } catch(e) {
-                        console.error("Init Error", e);
-                        alert("初始化失败，请联系管理员");
-                    }
+            if (typeof Bmob === 'undefined') {
+                log("❌ SDK加载失败，请刷新网页", 'error');
+                document.getElementById('sdkStatus').innerHTML = "<span style='color:red'>网络不通，请刷新</span>";
+            } else {
+                try {
+                    // 初始化 Bmob (使用标准方式)
+                    Bmob.initialize(APP_ID, REST_KEY);
+                    isReady = true;
+                    log("✅ Bmob初始化成功");
+                    document.getElementById('sdkStatus').innerHTML = "<span style='color:green'>连接成功，请输入名字</span>";
+                } catch(e) {
+                    log("❌ 初始化报错: " + e.message, 'error');
                 }
-            }, 500);
+            }
         };
+
+        const ALLOWED_NAMES = ['吉吉', '小江', '访客'];
+        let currentUser = "";
 
         function checkLogin() {
             const name = document.getElementById('userNameInput').value.trim();
-            
-            if (!isBmobReady) {
-                alert("稍等一下，正在连云端，或者刷新网页试试！");
-                return;
-            }
+            if(!isReady) { alert("云端没连上，请看下方黑框报错"); return; }
 
             if (ALLOWED_NAMES.includes(name)) {
                 currentUser = name;
-                document.getElementById('loginOverlay').style.transform = 'translateY(-100%)';
+                document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('welcomeText').innerText = `你好呀，${currentUser}！`;
-                fetchLeaderboard(); // 登录成功后拉取榜单
+                log("登录成功，正在拉取榜单...");
+                fetchData();
             } else {
-                alert("暗号不对！你是哪里的野粑粑？");
+                alert("暗号不对！");
             }
         }
 
-        function getTodayKey() {
-            return new Date().toLocaleDateString();
-        }
-
-        function fetchLeaderboard() {
-            const today = getTodayKey();
-            const query = Bmob.Query("Leaderboard"); 
-            query.equalTo("dateKey", "==", today);   
-            query.order("-createdAt");               
-            
+        function fetchData() {
+            const today = new Date().toLocaleDateString();
+            const query = Bmob.Query("Leaderboard");
+            query.equalTo("dateKey", "==", today);
+            query.order("-createdAt");
             query.find().then(res => {
-                // 成功连接！
-                renderCloudData(res);
-                updateStatusFromCloud(res);
+                log(`✅ 获取到 ${res.length} 条数据`);
+                renderList(res);
+                const my = res.find(i => i.name === currentUser);
+                document.getElementById('todayStatus').innerText = my ? `今日战绩: ${my.prize}` : "今日暂未抽奖";
             }).catch(err => {
-                // 连接失败
-                console.error("Bmob Err:", err);
-                document.getElementById('todayStatus').innerText = "⚠️ 连接云端超时";
-                document.getElementById('rankList').innerHTML = `<div style="text-align: center; color: red;">暂时连不上排行榜<br>不影响抽奖</div>`;
+                log("❌ 拉取失败: " + JSON.stringify(err), 'error');
+                document.getElementById('todayStatus').innerText = "获取数据失败";
             });
         }
 
-        function renderCloudData(list) {
-            const container = document.getElementById('rankList');
-            if (!list || list.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: #999; font-size: 0.8rem;">今日榜单虚位以待...</div>`;
-                return;
-            }
-            container.innerHTML = list.map((item, index) => {
-                return `
+        function renderList(list) {
+            const box = document.getElementById('rankList');
+            if(!list.length) { box.innerText = "今日榜单虚位以待..."; return; }
+            box.innerHTML = list.map((item, i) => `
                 <div class="rank-item">
-                    <span>${index === 0 ? '👑' : index + 1 + '.'} <span class="rank-name">${item.name}</span></span>
-                    <span class="rank-prize">${item.prize}</span>
-                    <span style="color:#ccc; font-size:0.7rem">${item.timeStr}</span>
+                    <span>${i+1}. ${item.name}</span>
+                    <span style="color:#ff4757;font-weight:bold">${item.prize}</span>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
-        function updateStatusFromCloud(list) {
-            const myRecord = list.find(item => item.name === currentUser);
-            if (myRecord) {
-                document.getElementById('todayStatus').innerText = `今日手气：${myRecord.prize} (已入榜单)`;
-            } else {
-                document.getElementById('todayStatus').innerText = `今日状态：还没决定谁是今天的最强狗粑粑...`;
-            }
-        }
-
-        function uploadScore(prizeName) {
-            const tipEl = document.getElementById('uploadTip');
-            if (prizeName === "再来一次") {
-                tipEl.innerText = "“再来一次”不作数，再接再厉！";
-                return;
-            }
-            if (!isBmobReady) {
-                tipEl.innerText = "网络断开了，没存上...";
-                return;
-            }
-
-            const today = getTodayKey();
-            const query = Bmob.Query("Leaderboard");
-            query.equalTo("dateKey", "==", today);
-            query.equalTo("name", "==", currentUser);
+        function uploadScore(prize) {
+            if(prize === "再来一次") return;
+            log(`正在上传: ${prize}...`);
             
-            query.find().then(res => {
-                if (res.length > 0) {
-                    tipEl.innerText = "今日已留名，本次纯属玩乐~";
+            // 检查今日是否已存在
+            const q1 = Bmob.Query("Leaderboard");
+            q1.equalTo("dateKey", "==", new Date().toLocaleDateString());
+            q1.equalTo("name", "==", currentUser);
+            q1.find().then(res => {
+                if(res.length > 0) {
+                    log("⚠️ 今日已存在，不重复上传");
+                    document.getElementById('uploadTip').innerText = "今日已记录，不再重复上传";
                 } else {
-                    const queryAdd = Bmob.Query("Leaderboard");
-                    queryAdd.set("name", currentUser);
-                    queryAdd.set("prize", prizeName);
-                    queryAdd.set("dateKey", today);
-                    queryAdd.set("timeStr", new Date().toLocaleTimeString('zh-CN', {hour12:false, hour:'2-digit', minute:'2-digit'}));
-                    
-                    queryAdd.save().then(obj => {
-                        tipEl.innerText = "恭喜！你的战绩已同步到全国榜单！";
-                        fetchLeaderboard(); 
-                    }).catch(err => {
-                        tipEl.innerText = "上传失败，请检查网络";
+                    const q2 = Bmob.Query("Leaderboard");
+                    q2.set("name", currentUser);
+                    q2.set("prize", prize);
+                    q2.set("dateKey", new Date().toLocaleDateString());
+                    q2.set("timeStr", new Date().toLocaleTimeString());
+                    q2.save().then(() => {
+                        log("✅ 上传成功!");
+                        document.getElementById('uploadTip').innerText = "战绩已同步云端";
+                        fetchData();
+                    }).catch(e => {
+                        log("❌ 上传失败: " + JSON.stringify(e), 'error');
                     });
                 }
             });
         }
 
-        // --- 抽奖逻辑 ---
+        // 抽奖逻辑
+        const prizes = [
+            { name: "亲一口", weight: 12, color: "#FF9F43" },
+            { name: "再来一次", weight: 15, color: "#54a0ff" },
+            { name: "奖金50", weight: 15, color: "#2ed573" },
+            { name: "奖金30", weight: 15, color: "#1dd1a1" },
+            { name: "奖金100", weight: 25, color: "#ff4757" }, 
+            { name: "奖金200", weight: 6, color: "#5f27cd" }, 
+            { name: "奖金5元", weight: 6, color: "#a29bfe" },  
+            { name: "嘻嘻嘻", weight: 6, color: "#fd79a8" }    
+        ];
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
-        let currentRotation = 0;
-        const totalWeight = prizes.reduce((sum, p) => sum + p.weight, 0);
+        const totalWeight = prizes.reduce((s, p) => s + p.weight, 0);
+        let rotation = 0;
 
-        function drawWheel() {
-            const radius = canvas.width / 2;
-            let startAngle = -Math.PI / 2; 
-            prizes.forEach(prize => {
-                const sliceAngle = (prize.weight / totalWeight) * 2 * Math.PI;
-                ctx.beginPath();
-                ctx.moveTo(radius, radius);
-                ctx.arc(radius, radius, radius, startAngle, startAngle + sliceAngle);
-                ctx.fillStyle = prize.color;
-                ctx.fill();
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
-                ctx.save();
-                ctx.translate(radius, radius);
-                ctx.rotate(startAngle + sliceAngle / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "#fff";
-                ctx.font = "bold 42px Arial";
-                ctx.fillText(prize.name, radius - 30, 10);
-                ctx.restore();
-                startAngle += sliceAngle;
+        function draw() {
+            const R = canvas.width / 2;
+            let start = -Math.PI/2;
+            prizes.forEach(p => {
+                const angle = (p.weight/totalWeight) * 2 * Math.PI;
+                ctx.beginPath(); ctx.moveTo(R,R); ctx.arc(R,R,R,start,start+angle);
+                ctx.fillStyle = p.color; ctx.fill(); ctx.stroke();
+                ctx.save(); ctx.translate(R,R); ctx.rotate(start+angle/2);
+                ctx.textAlign="right"; ctx.fillStyle="#fff"; ctx.font="bold 40px Arial";
+                ctx.fillText(p.name, R-30, 10); ctx.restore();
+                start += angle;
             });
         }
-        drawWheel();
+        draw();
 
         function startSpin() {
             const btn = document.getElementById('spinBtn');
-            if (btn.disabled) return;
+            if(btn.disabled) return;
             btn.disabled = true;
-
-            const rand = Math.random();
-            let acc = 0, targetPrize = prizes[prizes.length-1];
-            for (let p of prizes) { acc += p.prob; if (rand <= acc) { targetPrize = p; break; } }
-            let weightSumBefore = 0;
-            for(let p of prizes) { if(p === targetPrize) break; weightSumBefore += p.weight; }
-            const landingAngle = (weightSumBefore + targetPrize.weight/2) / totalWeight * 360;
-            const dist = 360 * 8 + (360 - landingAngle) - (currentRotation % 360);
-            currentRotation += dist;
-            canvas.style.transform = `rotate(${currentRotation}deg)`;
+            const rand = Math.random() * totalWeight;
+            let sum = 0, target = prizes[0];
+            for(let p of prizes) { sum += p.weight; if(rand <= sum) { target = p; break; } }
+            
+            let prevSum = 0;
+            for(let p of prizes) { if(p===target) break; prevSum += p.weight; }
+            const targetAngle = (prevSum + target.weight/2) / totalWeight * 360;
+            const dist = 360*5 + (360 - targetAngle) - (rotation%360);
+            rotation += dist;
+            canvas.style.transform = `rotate(${rotation}deg)`;
+            canvas.style.transition = "transform 4s cubic-bezier(0.2,0.8,0.2,1)";
 
             setTimeout(() => {
-                uploadScore(targetPrize.name);
-                document.getElementById('prizeText').innerText = targetPrize.name;
-                document.getElementById('prizeText').style.color = targetPrize.color;
+                document.getElementById('prizeText').innerText = target.name;
                 document.getElementById('modalOverlay').classList.add('active');
-                fireConfetti();
+                uploadScore(target.name);
             }, 4000);
         }
-        function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); document.getElementById('spinBtn').disabled = false; }
-        function fireConfetti() {
-            for (let i = 0; i < 60; i++) {
-                const c = document.createElement('div'); c.className = 'confetti';
-                c.style.background = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff6b81'][Math.floor(Math.random()*5)];
-                c.style.left = Math.random() * 100 + 'vw'; c.style.animation = `fall ${Math.random()*2+2}s linear forwards`;
-                document.body.appendChild(c); setTimeout(() => c.remove(), 3000);
-            }
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('spinBtn').disabled = false;
         }
     </script>
 </body>
