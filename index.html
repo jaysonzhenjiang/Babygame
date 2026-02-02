@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小宝宝快乐器 - 联机排行榜版</title>
+    <script src="https://unpkg.com/bmob.js-sdk@2.4.19/dist/Bmob-2.4.19.min.js"></script>
+    <style>
+        /* --- 样式部分保持不变 --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; margin: 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        }
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ff5e62; z-index: 1000; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            transition: transform 0.5s ease-in-out;
+        }
+        .login-box {
+            background: white; padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
+        }
+        .login-box input {
+            padding: 12px; font-size: 1.1rem; border: 2px solid #eee;
+            border-radius: 10px; margin-bottom: 15px; width: 200px; outline: none;
+        }
+        .btn-login {
+            background: #ff5e62; color: white; border: none;
+            padding: 10px 30px; border-radius: 25px; font-weight: bold; cursor: pointer;
+        }
+        .leaderboard {
+            width: 85vw; max-width: 380px; background: white;
+            border-radius: 15px; margin-top: 20px; padding: 15px;
+            box-shadow: 0 4px 15px rgba(255, 94, 98, 0.1); margin-bottom: 30px;
+            border: 2px solid #fff5f5;
+        }
+        .leaderboard h3 { 
+            margin: 0 0 12px 0; 
+            color: #ff5e62; 
+            font-size: 1.2rem; 
+            text-align: center;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #fff5f5; 
+            padding-bottom: 8px; 
+        }
+        .rank-item { display: flex; justify-content: space-between; font-size: 0.95rem; padding: 8px 0; border-bottom: 1px dashed #fceaea; align-items: center; }
+        .rank-name { font-weight: bold; color: #333; }
+        .rank-prize { color: #ff4757; font-weight: 800; font-size: 1rem; }
+
+        .stats-container { background: rgba(255, 255, 255, 0.8); border-radius: 15px; padding: 10px 20px; margin: 10px 0; text-align: center; backdrop-filter: blur(5px); border: 1px solid #fff; max-width: 85vw; }
+        .wheel-wrapper { position: relative; width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; margin: 10px auto; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 35px; height: 45px; background: #ff4757; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); }
+        .btn-start { padding: 12px 50px; font-size: 1.4rem; background: #2ed573; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(3px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; transform: scale(0.5); transition: transform 0.4s; border: 5px solid #ff5e62; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .prize-big-text { font-size: 2.5rem; font-weight: bold; margin: 15px 0; color: #ff4757; text-shadow: 1px 1px 0 #fff; }
+        .confetti { position: fixed; width: 10px; height: 10px; top: -20px; z-index: 101; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2 style="color: #ff5e62">你是谁？</h2>
+            <p style="color: #666; font-size: 0.8rem">只有专属粑粑能进来~</p>
+            <input type="text" id="userNameInput" placeholder="输入你的名字">
+            <br>
+            <button class="btn-login" onclick="checkLogin()">开启快乐</button>
+        </div>
+    </div>
+
+    <h1>小宝宝快乐器</h1>
+
+    <div class="stats-container">
+        <div id="welcomeText" style="font-weight: bold; color: #333; margin-bottom: 5px;"></div>
+        <div id="todayStatus" style="font-size: 0.8rem; color: #666;">正在连接云端数据...</div>
+    </div>
+
+    <div class="wheel-wrapper">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas" width="800" height="800"></canvas>
+    </div>
+
+    <button class="btn-start" onclick="startSpin()" id="spinBtn">点击开始</button>
+
+    <div class="leaderboard">
+        <h3>🐶 今日最强狗粑粑 (全国联网版)</h3>
+        <div id="rankList">
+            <div style="text-align: center; color: #999; font-size: 0.8rem;">加载中...</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div id="modalTitle" style="color: #888">运气爆棚！</div>
+            <div class="prize-big-text" id="prizeText"></div>
+            <div id="uploadTip" style="font-size: 0.8rem; color: #999; margin-bottom: 15px;"></div>
+            <button style="padding: 12px 30px; border-radius: 30px; border: none; background: #ff5e62; color:white; cursor: pointer; font-weight: bold;" onclick="closeModal()">开心收下</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // ⚠️ 请务必在这里填入你刚才复制的密钥 ⚠️
+        // ============================================
+        const SECRET_KEY = 'a1a0d16d97c4b5a2';   
+        const API_SAFE_CODE = 'BabyGame20260203'; 
+        
+        // 初始化 Bmob
+        if (SECRET_KEY.length > 5) {
+            Bmob.initialize(SECRET_KEY, API_SAFE_CODE);
+        }
+
+        const ALLOWED_NAMES = ['吉吉', '小江', '访客'];
+        let currentUser = "";
+        const prizes = [
+            { name: "亲一口", prob: 0.10, weight: 12, color: "#FF9F43" },
+            { name: "再来一次", prob: 0.30, weight: 15, color: "#54a0ff" },
+            { name: "奖金50", prob: 0.15, weight: 15, color: "#2ed573" },
+            { name: "奖金30", prob: 0.15, weight: 15, color: "#1dd1a1" },
+            { name: "奖金100", prob: 0.05, weight: 25, color: "#ff4757" }, 
+            { name: "奖金200", prob: 0.02, weight: 6, color: "#5f27cd" }, 
+            { name: "奖金5元", prob: 0.20, weight: 6, color: "#a29bfe" },  
+            { name: "嘻嘻嘻", prob: 0.03, weight: 6, color: "#fd79a8" }    
+        ];
+
+        function checkLogin() {
+            const name = document.getElementById('userNameInput').value.trim();
+            if (ALLOWED_NAMES.includes(name)) {
+                currentUser = name;
+                document.getElementById('loginOverlay').style.transform = 'translateY(-100%)';
+                document.getElementById('welcomeText').innerText = `你好呀，${currentUser}！`;
+                // 登录成功后，立刻去云端拉取今日榜单
+                fetchLeaderboard();
+            } else {
+                alert("暗号不对！你是哪里的野粑粑？");
+            }
+        }
+
+        function getTodayKey() {
+            // 获取今天的日期字符串，例如 "2023/10/27"
+            return new Date().toLocaleDateString();
+        }
+
+        // --- 从 Bmob 云端获取数据 ---
+        function fetchLeaderboard() {
+            if (SECRET_KEY.includes("这里填")) {
+                document.getElementById('rankList').innerHTML = "请先在代码里填写 Bmob 密钥";
+                return;
+            }
+
+            const today = getTodayKey();
+            const query = Bmob.Query("Leaderboard"); // 查询 Leaderboard 表
+            query.equalTo("dateKey", "==", today);   // 只查今天的
+            query.order("-createdAt");               // 按时间倒序（最新的在最前）
+            
+            query.find().then(res => {
+                // res 就是云端返回的数据数组
+                renderCloudData(res);
+                updateStatusFromCloud(res);
+            }).catch(err => {
+                console.error("连接失败:", err);
+                document.getElementById('rankList').innerHTML = `<div style="text-align: center; color: red; font-size: 0.8rem;">云端连接失败，请检查网络或密钥</div>`;
+            });
+        }
+
+        function renderCloudData(list) {
+            const container = document.getElementById('rankList');
+            if (!list || list.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #999; font-size: 0.8rem;">今日榜单虚位以待...</div>`;
+                return;
+            }
+            container.innerHTML = list.map((item, index) => {
+                return `
+                <div class="rank-item">
+                    <span>${index === 0 ? '👑' : index + 1 + '.'} <span class="rank-name">${item.name}</span></span>
+                    <span class="rank-prize">${item.prize}</span>
+                    <span style="color:#ccc; font-size:0.7rem">${item.timeStr}</span>
+                </div>
+            `}).join('');
+        }
+
+        function updateStatusFromCloud(list) {
+            // 看看我在不在今天的列表里
+            const myRecord = list.find(item => item.name === currentUser);
+            if (myRecord) {
+                document.getElementById('todayStatus').innerText = `今日手气：${myRecord.prize} (已入榜单)`;
+            } else {
+                document.getElementById('todayStatus').innerText = `今日状态：还没决定谁是今天的最强狗粑粑...`;
+            }
+        }
+
+        // --- 上传数据到 Bmob ---
+        function uploadScore(prizeName) {
+            const tipEl = document.getElementById('uploadTip');
+            
+            if (prizeName === "再来一次") {
+                tipEl.innerText = "“再来一次”不作数，再接再厉！";
+                return;
+            }
+
+            const today = getTodayKey();
+            
+            // 1. 先查询自己今天是不是已经提交过了
+            const query = Bmob.Query("Leaderboard");
+            query.equalTo("dateKey", "==", today);
+            query.equalTo("name", "==", currentUser);
+            
+            query.find().then(res => {
+                if (res.length > 0) {
+                    tipEl.innerText = "今日已留名，本次纯属玩乐~";
+                } else {
+                    // 2. 如果没提交过，则新建一条数据
+                    const queryAdd = Bmob.Query("Leaderboard");
+                    queryAdd.set("name", currentUser);
+                    queryAdd.set("prize", prizeName);
+                    queryAdd.set("dateKey", today);
+                    queryAdd.set("timeStr", new Date().toLocaleTimeString('zh-CN', {hour12:false, hour:'2-digit', minute:'2-digit'}));
+                    
+                    queryAdd.save().then(obj => {
+                        tipEl.innerText = "恭喜！你的战绩已同步到全国榜单！";
+                        fetchLeaderboard(); // 刷新榜单
+                    }).catch(err => {
+                        tipEl.innerText = "上传失败：" + JSON.stringify(err);
+                    });
+                }
+            });
+        }
+
+        // --- 下面是抽奖动画逻辑，无需改动 ---
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentRotation = 0;
+        const totalWeight = prizes.reduce((sum, p) => sum + p.weight, 0);
+
+        function drawWheel() {
+            const radius = canvas.width / 2;
+            let startAngle = -Math.PI / 2; 
+            prizes.forEach(prize => {
+                const sliceAngle = (prize.weight / totalWeight) * 2 * Math.PI;
+                ctx.beginPath();
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius, startAngle, startAngle + sliceAngle);
+                ctx.fillStyle = prize.color;
+                ctx.fill();
+                ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+                ctx.save();
+                ctx.translate(radius, radius);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right"; ctx.fillStyle = "#fff";
+                ctx.font = "bold 42px Arial";
+                ctx.fillText(prize.name, radius - 30, 10);
+                ctx.restore();
+                startAngle += sliceAngle;
+            });
+        }
+        drawWheel();
+
+        function startSpin() {
+            const btn = document.getElementById('spinBtn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+
+            const rand = Math.random();
+            let acc = 0, targetPrize = prizes[prizes.length-1];
+            for (let p of prizes) {
+                acc += p.prob;
+                if (rand <= acc) { targetPrize = p; break; }
+            }
+
+            let weightSumBefore = 0;
+            for(let p of prizes) {
+                if(p === targetPrize) break;
+                weightSumBefore += p.weight;
+            }
+            const landingAngle = (weightSumBefore + targetPrize.weight/2) / totalWeight * 360;
+            const dist = 360 * 8 + (360 - landingAngle) - (currentRotation % 360);
+            currentRotation += dist;
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                uploadScore(targetPrize.name);
+                document.getElementById('prizeText').innerText = targetPrize.name;
+                document.getElementById('prizeText').style.color = targetPrize.color;
+                document.getElementById('modalOverlay').classList.add('active');
+                fireConfetti();
+            }, 4000);
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('spinBtn').disabled = false;
+        }
+
+        function fireConfetti() {
+            for (let i = 0; i < 60; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.background = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff6b81'][Math.floor(Math.random()*5)];
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.animation = `fall ${Math.random()*2+2}s linear forwards`;
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
+        }
+    </script>
+</body>
+</html>
