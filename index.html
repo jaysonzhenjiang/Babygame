@@ -253,29 +253,34 @@
         }
 
         // --- 2. 概率与奖品逻辑调整 ---
-        // 总权重设为 10000 以支持 0.08% 的精度
-        // 逻辑：权重越大，面积越大，概率越高
+        // weight: 决定中奖概率 (数学)
+        // drawWeight: 决定扇形大小 (视觉) -> 解决了大奖看不见的问题
         const prizes = [
-            // --- 大奖区 ---
-            { name: "888发财", weight: 8, color: "#d35400", txtColor: "#fff" },    // 0.08%
-            { name: "666大顺", weight: 60, color: "#e67e22", txtColor: "#fff" },   // 0.6%
+            // --- 大奖区 (数学概率低，但视觉面积设为 1，清晰可见) ---
+            { name: "888发财", weight: 8, drawWeight: 1, color: "#d35400", txtColor: "#fff" },    // 0.08%
+            { name: "666大顺", weight: 60, drawWeight: 1, color: "#e67e22", txtColor: "#fff" },   // 0.6%
             
-            // --- 现金区 (权重降低) ---
-            { name: "奖金200", weight: 150, color: "#f1c40f", txtColor: "#c0392b" }, 
-            { name: "奖金100", weight: 200, color: "#f39c12", txtColor: "#c0392b" }, 
-            { name: "奖金50", weight: 625, color: "#e74c3c", txtColor: "#fff" }, 
-            { name: "奖金30", weight: 975, color: "#c0392b", txtColor: "#fff" }, 
-            { name: "奖金5元", weight: 2250, color: "#ecf0f1", txtColor: "#333" },   
+            // --- 现金区 (面积正常) ---
+            { name: "奖金200", weight: 150, drawWeight: 1, color: "#f1c40f", txtColor: "#c0392b" }, 
+            { name: "奖金100", weight: 200, drawWeight: 1, color: "#f39c12", txtColor: "#c0392b" }, 
+            { name: "奖金50", weight: 625, drawWeight: 1, color: "#e74c3c", txtColor: "#fff" }, 
+            { name: "奖金30", weight: 975, drawWeight: 1, color: "#c0392b", txtColor: "#fff" }, 
+            { name: "奖金5元", weight: 2250, drawWeight: 1, color: "#ecf0f1", txtColor: "#333" },   
 
-            // --- 氛围与互动区 (权重增加，作为填充) ---
-            { name: "亲一口", weight: 2000, color: "#fd79a8", txtColor: "#fff" }, 
-            { name: "再来一次", weight: 1500, color: "#74b9ff", txtColor: "#fff" },
-            { name: "新年快乐", weight: 2232, color: "#fab1a0", txtColor: "#d63031" } // 凑齐10000
+            // --- 氛围区 (drawWeight 设为 1.2，稍微大一点点，符合"钱少的稍微大点") ---
+            { name: "亲一口", weight: 2000, drawWeight: 1.2, color: "#fd79a8", txtColor: "#fff" }, 
+            { name: "再来一次", weight: 1500, drawWeight: 1.2, color: "#74b9ff", txtColor: "#fff" },
+            { name: "新年快乐", weight: 2232, drawWeight: 1.2, color: "#fab1a0", txtColor: "#d63031" } 
         ];
 
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
-        const totalWeight = prizes.reduce((s, p) => s + p.weight, 0); // 应该是 10000
+        
+        // 计算概率总重
+        const totalProbabilityWeight = prizes.reduce((s, p) => s + p.weight, 0); // 10000
+        // 计算视觉总重
+        const totalDrawWeight = prizes.reduce((s, p) => s + p.drawWeight, 0); 
+
         let rotation = 0;
 
         function draw() {
@@ -283,7 +288,9 @@
             let start = -Math.PI/2;
             
             prizes.forEach(p => {
-                const angle = (p.weight/totalWeight) * 2 * Math.PI;
+                // 使用 drawWeight (视觉权重) 来画图
+                const angle = (p.drawWeight / totalDrawWeight) * 2 * Math.PI;
+                
                 ctx.beginPath(); ctx.moveTo(R,R); ctx.arc(R,R,R,start,start+angle);
                 ctx.fillStyle = p.color; ctx.fill(); 
                 ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
@@ -291,7 +298,7 @@
                 ctx.save(); ctx.translate(R,R); ctx.rotate(start+angle/2);
                 ctx.textAlign="right"; 
                 ctx.fillStyle = p.txtColor || "#fff"; 
-                ctx.font="bold 36px Arial"; // 字体稍调小
+                ctx.font="bold 36px Arial"; 
                 ctx.fillText(p.name, R-30, 10); 
                 ctx.restore();
                 start += angle;
@@ -305,18 +312,24 @@
             btn.disabled = true;
             btn.innerText = "好运流转中...";
             
-            const rand = Math.random() * totalWeight;
+            // 1. 抽奖逻辑：使用 weight (数学概率)
+            const rand = Math.random() * totalProbabilityWeight;
             let sum = 0, target = prizes[0];
             for(let p of prizes) { sum += p.weight; if(rand <= sum) { target = p; break; } }
             
-            let prevSum = 0;
-            for(let p of prizes) { if(p===target) break; prevSum += p.weight; }
-            const targetAngle = (prevSum + target.weight/2) / totalWeight * 360;
+            // 2. 旋转角度计算：使用 drawWeight (视觉位置)
+            // 必须计算该奖项在视觉上的角度位置
+            let prevDrawSum = 0;
+            for(let p of prizes) { if(p===target) break; prevDrawSum += p.drawWeight; }
+            
+            // 计算目标中心点的角度
+            const targetAngle = (prevDrawSum + target.drawWeight/2) / totalDrawWeight * 360;
+            
             const dist = 360*6 + (360 - targetAngle) - (rotation%360); // 转6圈
             rotation += dist;
             
             canvas.style.transform = `rotate(${rotation}deg)`;
-            canvas.style.transition = "transform 5s cubic-bezier(0.2,0.8,0.1,1)"; // 时间加长一点更有张力
+            canvas.style.transition = "transform 5s cubic-bezier(0.2,0.8,0.1,1)"; 
 
             setTimeout(() => {
                 document.getElementById('prizeText').innerText = target.name;
