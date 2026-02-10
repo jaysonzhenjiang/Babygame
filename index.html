@@ -212,26 +212,80 @@
             }
         }
 
-        function fetchData() {
-            const today = new Date().toLocaleDateString();
-            const params = { where: JSON.stringify({ "dateKey": today }), order: "-createdAt" };
-            callBmob('GET', 'Leaderboard', params).then(res => {
-                const list = res.results || [];
-                renderList(list);
-                const my = list.find(i => i.name === currentUser);
-                document.getElementById('todayStatus').innerText = my ? `今日已中: ${my.prize}` : "今日好运还没用掉";
-            });
+	function fetchData() {
+           	 const today = new Date().toLocaleDateString();
+           	 // limit: 500 保证能拉取到今天所有人的记录，方便排序
+            	const params = { where: JSON.stringify({ "dateKey": today }), order: "-createdAt", limit: 500 }; 
+            
+            	callBmob('GET', 'Leaderboard', params).then(res => {
+                	const list = res.results || [];
+                	renderList(list);
+                
+                // 查找自己的最新一条记录
+                	const my = list.find(i => i.name === currentUser);
+                	document.getElementById('todayStatus').innerText = my ? `最新战绩: ${my.prize}` : "今日好运还没用掉";
+            	});
+        	}
+
+        function getMoneyValue(str) {
+            // 提取字符串里的数字，比如 "奖金50" -> 50
+            // 特殊处理：如果是 888发财，就是888
+            if(!str) return 0;
+            const num = str.match(/\d+/);
+            return num ? parseInt(num[0]) : 0;
         }
 
         function renderList(list) {
             const box = document.getElementById('rankList');
-            if(!list.length) { box.innerText = "谁是今日最强狗粑粑！"; return; }
-            box.innerHTML = list.map((item, i) => `
-                <div class="rank-item">
-                    <span>${i+1}. ${item.name}</span>
-                    <span style="color:#e74c3c;font-weight:bold">${item.prize}</span>
-                </div>
-            `).join('');
+            if(!list.length) { box.innerText = "今日榜单虚位以待，快来拿第一！"; return; }
+
+            // 1. 分离数据
+            let moneyList = [];
+            let otherList = [];
+
+            list.forEach(item => {
+                const val = getMoneyValue(item.prize);
+                if (val > 0) {
+                    item._val = val; // 临时存一下金额方便排序
+                    moneyList.push(item);
+                } else {
+                    otherList.push(item);
+                }
+            });
+
+            // 2. 财富榜：按金额倒序（钱多的在上面）
+            moneyList.sort((a, b) => b._val - a._val);
+            
+            // 3. 气氛组：按时间倒序（最新的在上面，默认就是）
+            
+            let html = "";
+
+            // --- 渲染财富榜 ---
+            if (moneyList.length > 0) {
+                html += `<div style="background:#fff5f5; padding:5px; border-radius:5px; margin-bottom:10px; font-weight:bold; color:#e74c3c;">💰 富豪榜</div>`;
+                html += moneyList.map((item, i) => {
+                    // 前三名加个皇冠图标
+                    let icon = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `${i+1}.`));
+                    return `
+                    <div class="rank-item">
+                        <span>${icon} ${item.name}</span>
+                        <span style="color:#c0392b; font-weight:bold">${item.prize}</span>
+                    </div>`;
+                }).join('');
+            }
+
+            // --- 渲染气氛组 ---
+            if (otherList.length > 0) {
+                html += `<div style="background:#f0f3f5; padding:5px; border-radius:5px; margin-top:15px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">🎭 气氛组</div>`;
+                html += otherList.map((item) => `
+                    <div class="rank-item" style="color:#999;">
+                        <span>${item.name}</span>
+                        <span>${item.prize}</span>
+                    </div>
+                `).join('');
+            }
+
+            box.innerHTML = html;
         }
 
         function uploadScore(prize) {
