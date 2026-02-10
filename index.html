@@ -257,20 +257,20 @@
         // drawWeight: 决定扇形大小 (视觉) -> 解决了大奖看不见的问题
         const prizes = [
             // --- 大奖区 (数学概率低，但视觉面积设为 1，清晰可见) ---
-            { name: "888发财", weight: 8, drawWeight: 1, color: "#d35400", txtColor: "#fff" },    // 0.08%
-            { name: "666大顺", weight: 60, drawWeight: 1, color: "#e67e22", txtColor: "#fff" },   // 0.6%
+            { name: "888元！", weight: 8, drawWeight: 0.6, color: "#d35400", txtColor: "#fff" },    // 0.08%
+            { name: "666元！", weight: 60, drawWeight: 0.6, color: "#e67e22", txtColor: "#fff" },   // 0.6%
             
             // --- 现金区 (面积正常) ---
-            { name: "奖金200", weight: 150, drawWeight: 1, color: "#f1c40f", txtColor: "#c0392b" }, 
-            { name: "奖金100", weight: 200, drawWeight: 1, color: "#f39c12", txtColor: "#c0392b" }, 
+            { name: "奖金200", weight: 150, drawWeight: 0.8, color: "#f1c40f", txtColor: "#c0392b" }, 
+            { name: "奖金100", weight: 200, drawWeight: 0.9, color: "#f39c12", txtColor: "#c0392b" }, 
             { name: "奖金50", weight: 625, drawWeight: 1, color: "#e74c3c", txtColor: "#fff" }, 
             { name: "奖金30", weight: 975, drawWeight: 1, color: "#c0392b", txtColor: "#fff" }, 
-            { name: "奖金5元", weight: 2250, drawWeight: 1, color: "#ecf0f1", txtColor: "#333" },   
+            { name: "奖金5元", weight: 2250, drawWeight: 1.2, color: "#ecf0f1", txtColor: "#333" },   
 
             // --- 氛围区 (drawWeight 设为 1.2，稍微大一点点，符合"钱少的稍微大点") ---
-            { name: "亲一口", weight: 2000, drawWeight: 1.2, color: "#fd79a8", txtColor: "#fff" }, 
-            { name: "再来一次", weight: 1500, drawWeight: 1.2, color: "#74b9ff", txtColor: "#fff" },
-            { name: "新年快乐", weight: 2232, drawWeight: 1.2, color: "#fab1a0", txtColor: "#d63031" } 
+            { name: "亲一口", weight: 2000, drawWeight: 1.3, color: "#fd79a8", txtColor: "#fff" }, 
+            { name: "再来一次", weight: 1500, drawWeight: 1.3, color: "#74b9ff", txtColor: "#fff" },
+            { name: "新年快乐", weight: 2232, drawWeight: 1.3, color: "#fab1a0", txtColor: "#d63031" } 
         ];
 
         const canvas = document.getElementById('wheelCanvas');
