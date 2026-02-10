@@ -3,72 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小宝宝快乐器 - 修复版</title>
+    <title>2026马年快乐器 - 新春版</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); padding-bottom: 200px; }
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff5e62; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 300px; }
-        .login-box input { padding: 12px; font-size: 1.1rem; border: 2px solid #eee; border-radius: 10px; margin-bottom: 15px; width: 100%; outline: none; box-sizing: border-box; }
-        .btn-login { background: #ff5e62; color: white; border: none; padding: 10px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; }
+        /* --- 1. 2026 新年氛围样式 --- */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0; 
+            /* 新年红背景 */
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); 
+            padding-bottom: 200px; 
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* 漂浮装饰 */
+        .deco { position: fixed; font-size: 2rem; opacity: 0.2; z-index: 0; animation: float 6s infinite ease-in-out; pointer-events: none; }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
         
-        .leaderboard { width: 85vw; max-width: 380px; background: white; border-radius: 15px; margin-top: 20px; padding: 15px; border: 2px solid #fff5f5; }
-        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #fceaea; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #e74c3c; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         
-        .wheel-wrapper { position: relative; width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; margin: 10px auto; }
-        canvas { width: 100%; height: 100%; border-radius: 50%; }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 35px; height: 45px; background: #ff4757; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; }
-        .btn-start { padding: 12px 50px; font-size: 1.4rem; background: #2ed573; color: white; border: none; border-radius: 50px; margin-top: 10px; cursor: pointer; }
+        .login-box { 
+            background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 300px; 
+            border: 4px solid #f1c40f; /* 金边 */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .login-box h2 { color: #c0392b; margin-top: 0; }
+        .login-box input { padding: 12px; font-size: 1.1rem; border: 2px solid #eee; border-radius: 10px; margin-bottom: 15px; width: 100%; outline: none; box-sizing: border-box; color: #333; }
+        
+        .btn-login { background: #c0392b; color: #f1c40f; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1.1rem; transition: transform 0.2s; }
+        .btn-login:active { transform: scale(0.95); }
+        
+        .leaderboard { 
+            width: 85vw; max-width: 380px; 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 15px; margin-top: 20px; padding: 15px; 
+            border: 2px solid #f1c40f; /* 金边 */
+            color: #333;
+        }
+        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #fab1a0; }
+        
+        /* 转盘样式优化 */
+        .wheel-wrapper { 
+            position: relative; width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; margin: 20px auto; 
+            background: #f1c40f; /* 金色底盘 */
+            padding: 5px;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        canvas { width: 100%; height: 100%; border-radius: 50%; display: block; }
+        
+        .pointer { 
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%); 
+            width: 40px; height: 50px; 
+            background: #e74c3c; 
+            border: 2px solid #fff;
+            clip-path: polygon(50% 100%, 0 0, 100% 0); 
+            z-index: 10; 
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        }
+
+        /* --- 3. 交互动画 --- */
+        .btn-start { 
+            padding: 15px 60px; font-size: 1.5rem; 
+            background: linear-gradient(to bottom, #f1c40f, #f39c12); /* 金色按钮 */
+            color: #d35400; font-weight: bold; 
+            border: 2px solid #fff; border-radius: 50px; 
+            margin-top: 15px; cursor: pointer; 
+            box-shadow: 0 5px 0 #d35400, 0 10px 10px rgba(0,0,0,0.2);
+            transition: all 0.1s;
+            animation: pulse 2s infinite;
+        }
+        .btn-start:active { transform: translateY(5px); box-shadow: 0 0 0 #d35400; }
+        .btn-start:disabled { background: #ccc; color: #666; box-shadow: none; animation: none; cursor: not-allowed; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
         #debugConsole {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 120px;
-            background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace;
-            font-size: 11px; overflow-y: scroll; padding: 10px; box-sizing: border-box;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 100px;
+            background: rgba(0,0,0,0.6); color: #0f0; font-family: monospace;
+            font-size: 10px; overflow-y: scroll; padding: 10px; box-sizing: border-box;
             z-index: 9999; text-align: left; pointer-events: none;
+            display: none; /* 默认隐藏，看起来更干净 */
         }
         .log-error { color: #ff5e62; font-weight: bold; }
         
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; padding: 20px; border-radius: 15px; text-align: center; width: 80%; }
+        .modal-content { 
+            background: #fff url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text y="50" font-size="20">🧧</text></svg>');
+            padding: 30px; border-radius: 20px; text-align: center; width: 80%; color: #333; 
+            border: 4px solid #f1c40f;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* 撒花特效粒子 */
+        .confetti { position: fixed; width: 10px; height: 10px; z-index: 2001; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
     </style>
 </head>
 <body>
 
+    <div class="deco" style="top:5%; left:5%">🏮</div>
+    <div class="deco" style="top:15%; right:5%; animation-delay:1s">🧨</div>
+    <div class="deco" style="bottom:10%; left:10%; animation-delay:2s">🐴</div>
+    <div class="deco" style="bottom:20%; right:10%; animation-delay:3s">💰</div>
+
     <div id="loginOverlay">
         <div class="login-box">
-            <h2 style="color: #ff5e62">你是谁？</h2>
-            <input type="text" id="userNameInput" placeholder="输入你的名字">
-            <button class="btn-login" onclick="checkLogin()">开启快乐</button>
-            <div id="networkTip" style="margin-top:10px; font-size:12px; color:#666;">直连模式就绪</div>
+            <h2>🐴 你是什么狗粑粑</h2>
+            <input type="text" id="userNameInput" placeholder="狗粑粑">
+            <button class="btn-login" onclick="checkLogin()">开启鸿运</button>
+            <div id="networkTip" style="margin-top:10px; font-size:12px; color:#666;">服务器连接中...</div>
         </div>
     </div>
 
-    <h1>小宝宝快乐器</h1>
-    <div style="background:rgba(255,255,255,0.8); padding:10px; border-radius:10px; text-align:center;">
-        <div id="welcomeText" style="font-weight:bold;"></div>
-        <div id="todayStatus" style="font-size:12px; color:#666;">等待操作...</div>
+    <h1 style="text-shadow: 2px 2px 0 rgba(0,0,0,0.2); margin-bottom: 10px;">2026马到成功</h1>
+    <div style="background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:20px; text-align:center; color:#c0392b; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div id="welcomeText" style="font-weight:bold; font-size: 1.1rem;"></div>
+        <div id="todayStatus" style="font-size:12px; color:#666; margin-top:4px;">等待好运...</div>
     </div>
 
     <div class="wheel-wrapper">
         <div class="pointer"></div>
         <canvas id="wheelCanvas" width="800" height="800"></canvas>
     </div>
-    <button class="btn-start" onclick="startSpin()" id="spinBtn">点击开始</button>
+    
+    <button class="btn-start" onclick="startSpin()" id="spinBtn">立即转运</button>
 
     <div class="leaderboard">
-        <h3 style="color:#ff5e62; text-align:center; border-bottom:1px solid #eee; padding-bottom:5px;">🐶 实时战况</h3>
-        <div id="rankList" style="text-align:center; font-size:12px; color:#999;">加载中...</div>
+        <h3 style="color:#c0392b; text-align:center; border-bottom:1px solid #fab1a0; padding-bottom:5px; margin:0 0 10px 0;">🏆 今日红榜</h3>
+        <div id="rankList" style="text-align:center; font-size:12px; color:#666;">加载中...</div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
-            <h2 id="prizeText" style="color:#ff4757; font-size:2rem;"></h2>
+            <h3 style="color:#999; margin:0;">恭喜获得</h3>
+            <h2 id="prizeText" style="color:#e74c3c; font-size:2.5rem; margin: 10px 0;"></h2>
             <div id="uploadTip" style="font-size:12px; color:#999;"></div>
-            <button onclick="closeModal()" style="margin-top:10px; padding:10px 30px; background:#ff5e62; color:white; border:none; border-radius:20px;">收下</button>
+            <button onclick="closeModal()" style="margin-top:20px; padding:12px 40px; background:#e74c3c; color:white; border:none; border-radius:25px; font-size:1.2rem; cursor:pointer;">开心收下</button>
         </div>
     </div>
 
-    <div id="debugConsole"><div>>>> 系统启动: 修复400错误版</div></div>
+    <div id="debugConsole"><div>>>> 系统启动: 2026新春特别版</div></div>
 
     <script>
         function log(msg, type) {
@@ -80,30 +160,23 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // ✅ 已填好你的 ID 和 Key
+        // Bmob Config (保持原样)
         const APP_ID = '46665cb4f873b9c33d508dbe48682e4b';
         const REST_KEY = '9837d091aafcf90ccb396f1e9a75929a';
 
-        // 🚀 改进的请求函数：修复 400 错误
         async function callBmob(method, endpoint, data) {
             const url = `https://api.bmobcloud.com/1/classes/${endpoint}` + (method === 'GET' && data ? '?' + new URLSearchParams(data) : '');
-            
             const headers = {
                 'X-Bmob-Application-Id': APP_ID,
                 'X-Bmob-REST-API-Key': REST_KEY
             };
-            // ⚠️ 关键修改：只有 POST 才加 Content-Type，防止 GET 报 400 错误
-            if (method === 'POST') {
-                headers['Content-Type'] = 'application/json';
-            }
-
+            if (method === 'POST') headers['Content-Type'] = 'application/json';
             const options = { method: method, headers: headers };
             if (method === 'POST') options.body = JSON.stringify(data);
 
             try {
                 const res = await fetch(url, options);
                 if (!res.ok) {
-                    // 读取具体的错误信息
                     const errText = await res.text();
                     throw new Error(`Code ${res.status}: ${errText}`);
                 }
@@ -117,15 +190,13 @@
         const ALLOWED_NAMES = ['吉吉', '小江', '访客'];
         let currentUser = "";
 
-        // 测试连接
         window.onload = function() {
             log("正在测试连接...");
             callBmob('GET', 'Leaderboard', { limit: 1 }).then(() => {
                 log("✅ 连接成功！");
-                document.getElementById('networkTip').innerHTML = "<span style='color:green'>✅ 网络通畅</span>";
+                document.getElementById('networkTip').innerHTML = "<span style='color:green'>✅ 网络通畅，准备发财</span>";
             }).catch(e => {
-                log("连接测试失败，请检查是否已在后台清空安全码", true);
-                document.getElementById('networkTip').innerHTML = "<span style='color:red'>⚠️ 连接受阻，请看下方报错</span>";
+                document.getElementById('networkTip').innerHTML = "<span style='color:red'>⚠️ 网络不给力</span>";
             });
         }
 
@@ -134,56 +205,46 @@
             if (ALLOWED_NAMES.includes(name)) {
                 currentUser = name;
                 document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('welcomeText').innerText = `你好呀，${currentUser}！`;
+                document.getElementById('welcomeText').innerText = `🐴 ${currentUser}，新年快乐！`;
                 fetchData();
             } else {
-                alert("暗号不对！");
+                alert("名字不对哦，是不是输错了？");
             }
         }
 
         function fetchData() {
-            log("正在刷新榜单...");
             const today = new Date().toLocaleDateString();
             const params = { where: JSON.stringify({ "dateKey": today }), order: "-createdAt" };
-
             callBmob('GET', 'Leaderboard', params).then(res => {
                 const list = res.results || [];
-                log(`✅ 获取到 ${list.length} 条数据`);
                 renderList(list);
                 const my = list.find(i => i.name === currentUser);
-                document.getElementById('todayStatus').innerText = my ? `今日战绩: ${my.prize}` : "今日暂未抽奖";
-            }).catch(() => {
-                document.getElementById('todayStatus').innerText = "获取失败";
+                document.getElementById('todayStatus').innerText = my ? `今日已中: ${my.prize}` : "今日好运还没用掉";
             });
         }
 
         function renderList(list) {
             const box = document.getElementById('rankList');
-            if(!list.length) { box.innerText = "今日榜单虚位以待..."; return; }
+            if(!list.length) { box.innerText = "今日榜单虚位以待，快来拿第一！"; return; }
             box.innerHTML = list.map((item, i) => `
                 <div class="rank-item">
                     <span>${i+1}. ${item.name}</span>
-                    <span style="color:#ff4757;font-weight:bold">${item.prize}</span>
+                    <span style="color:#e74c3c;font-weight:bold">${item.prize}</span>
                 </div>
             `).join('');
         }
 
         function uploadScore(prize) {
-            if(prize === "再来一次") return;
-            log(`正在保存: ${prize}...`);
-            const today = new Date().toLocaleDateString();
+            if(prize.includes("再来") || prize.includes("新年")) return; // 这些不上传
             
-            // 查重
+            const today = new Date().toLocaleDateString();
             callBmob('GET', 'Leaderboard', { where: JSON.stringify({ "dateKey": today, "name": currentUser }) }).then(res => {
                 if (res.results && res.results.length > 0) {
-                    log("⚠️ 今天已经玩过了");
                     document.getElementById('uploadTip').innerText = "今日已记录，不再重复上传";
                 } else {
-                    // 上传
                     callBmob('POST', 'Leaderboard', {
                         name: currentUser, prize: prize, dateKey: today, timeStr: new Date().toLocaleTimeString()
                     }).then(() => {
-                        log("✅ 保存成功！");
                         document.getElementById('uploadTip').innerText = "战绩已同步云端";
                         fetchData();
                     });
@@ -191,32 +252,48 @@
             });
         }
 
-        // 抽奖动画逻辑
+        // --- 2. 概率与奖品逻辑调整 ---
+        // 总权重设为 10000 以支持 0.08% 的精度
+        // 逻辑：权重越大，面积越大，概率越高
         const prizes = [
-            { name: "亲一口", weight: 12, color: "#FF9F43" },
-            { name: "再来一次", weight: 15, color: "#54a0ff" },
-            { name: "奖金50", weight: 15, color: "#2ed573" },
-            { name: "奖金30", weight: 15, color: "#1dd1a1" },
-            { name: "奖金100", weight: 25, color: "#ff4757" }, 
-            { name: "奖金200", weight: 6, color: "#5f27cd" }, 
-            { name: "奖金5元", weight: 6, color: "#a29bfe" },  
-            { name: "嘻嘻嘻", weight: 6, color: "#fd79a8" }    
+            // --- 大奖区 ---
+            { name: "888发财", weight: 8, color: "#d35400", txtColor: "#fff" },    // 0.08%
+            { name: "666大顺", weight: 60, color: "#e67e22", txtColor: "#fff" },   // 0.6%
+            
+            // --- 现金区 (权重降低) ---
+            { name: "奖金200", weight: 150, color: "#f1c40f", txtColor: "#c0392b" }, 
+            { name: "奖金100", weight: 200, color: "#f39c12", txtColor: "#c0392b" }, 
+            { name: "奖金50", weight: 625, color: "#e74c3c", txtColor: "#fff" }, 
+            { name: "奖金30", weight: 975, color: "#c0392b", txtColor: "#fff" }, 
+            { name: "奖金5元", weight: 2250, color: "#ecf0f1", txtColor: "#333" },   
+
+            // --- 氛围与互动区 (权重增加，作为填充) ---
+            { name: "亲一口", weight: 2000, color: "#fd79a8", txtColor: "#fff" }, 
+            { name: "再来一次", weight: 1500, color: "#74b9ff", txtColor: "#fff" },
+            { name: "新年快乐", weight: 2232, color: "#fab1a0", txtColor: "#d63031" } // 凑齐10000
         ];
+
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
-        const totalWeight = prizes.reduce((s, p) => s + p.weight, 0);
+        const totalWeight = prizes.reduce((s, p) => s + p.weight, 0); // 应该是 10000
         let rotation = 0;
 
         function draw() {
             const R = canvas.width / 2;
             let start = -Math.PI/2;
+            
             prizes.forEach(p => {
                 const angle = (p.weight/totalWeight) * 2 * Math.PI;
                 ctx.beginPath(); ctx.moveTo(R,R); ctx.arc(R,R,R,start,start+angle);
-                ctx.fillStyle = p.color; ctx.fill(); ctx.stroke();
+                ctx.fillStyle = p.color; ctx.fill(); 
+                ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
+                
                 ctx.save(); ctx.translate(R,R); ctx.rotate(start+angle/2);
-                ctx.textAlign="right"; ctx.fillStyle="#fff"; ctx.font="bold 40px Arial";
-                ctx.fillText(p.name, R-30, 10); ctx.restore();
+                ctx.textAlign="right"; 
+                ctx.fillStyle = p.txtColor || "#fff"; 
+                ctx.font="bold 36px Arial"; // 字体稍调小
+                ctx.fillText(p.name, R-30, 10); 
+                ctx.restore();
                 start += angle;
             });
         }
@@ -226,6 +303,8 @@
             const btn = document.getElementById('spinBtn');
             if(btn.disabled) return;
             btn.disabled = true;
+            btn.innerText = "好运流转中...";
+            
             const rand = Math.random() * totalWeight;
             let sum = 0, target = prizes[0];
             for(let p of prizes) { sum += p.weight; if(rand <= sum) { target = p; break; } }
@@ -233,20 +312,42 @@
             let prevSum = 0;
             for(let p of prizes) { if(p===target) break; prevSum += p.weight; }
             const targetAngle = (prevSum + target.weight/2) / totalWeight * 360;
-            const dist = 360*5 + (360 - targetAngle) - (rotation%360);
+            const dist = 360*6 + (360 - targetAngle) - (rotation%360); // 转6圈
             rotation += dist;
+            
             canvas.style.transform = `rotate(${rotation}deg)`;
-            canvas.style.transition = "transform 4s cubic-bezier(0.2,0.8,0.2,1)";
+            canvas.style.transition = "transform 5s cubic-bezier(0.2,0.8,0.1,1)"; // 时间加长一点更有张力
 
             setTimeout(() => {
                 document.getElementById('prizeText').innerText = target.name;
                 document.getElementById('modalOverlay').classList.add('active');
+                
+                // 3. 触发撒花动画
+                fireConfetti();
+                
                 uploadScore(target.name);
-            }, 4000);
+                btn.innerText = "立即转运";
+            }, 5000);
         }
+
         function closeModal() {
             document.getElementById('modalOverlay').classList.remove('active');
             document.getElementById('spinBtn').disabled = false;
+        }
+
+        // --- 简单撒花特效 ---
+        function fireConfetti() {
+            const colors = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
+            for(let i=0; i<50; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.background = colors[Math.floor(Math.random()*colors.length)];
+                c.style.left = Math.random()*100 + 'vw';
+                c.style.top = -10 + 'px';
+                c.style.animationDuration = (Math.random()*2 + 1) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
         }
     </script>
 </body>
